@@ -1,69 +1,30 @@
 # Monday logging (after every publish)
 
-Log every published update on **📝 Content schedule | Blog SEO & Content Squad** (`5546696573`) and update the article's cluster item on **🌌 EN Blogs Clusters** (`5557032877`). Never skip it. If a Monday call fails, report the error and finish the Wix work regardless; the article is already live.
+Log every published update on **Content Pipeline - SEO Hub** (`2709452345`, workspace "SEO Marketing") in the group **Agentic updates** (`group_mm9c1yka`). Never skip it. If a Monday call fails, report the error and finish the Wix work regardless; the article is already live. If Monday asks for more permissions, the user must reconnect the connector (Settings > Connectors).
 
-If Monday returns "connector requires additional permissions", the user needs to reconnect the connector (Settings > Connectors). Report it.
-
----
+The old Blog SEO & Content Squad board (`5546696573`) and the EN Blogs Clusters board (`5557032877`) belong to other blogs. Do not write to them.
 
 ## Step 1: one item per article per day
 
-Before creating anything, look for an existing item for this article created or updated today (match on the article title and the connected cluster item). If one exists, **update it** (re-type it if the scope grew, append to `text3`). Never create a second item for the same article on the same day. A second same-day pass once produced four duplicates that had to be consolidated by hand.
+Search the Agentic updates group for an item whose URL column matches the article. If one exists, **update it** (append to the summary, never create a second item for the same article). If none exists, create it. Never delete Monday items; surface duplicates and let the user remove them. Never move or edit the article's original item in the Published or Refresh groups.
 
-**Never delete Monday items.** Surface duplicates and let the user remove them. Before anyone deletes a duplicate cluster item, check which content items link to each copy, ask which to keep and move the links over first.
+## Step 2: build the exact column values
 
-## Step 2: find the group
-
-`get_board_info` on `5546696573`. Use the current month's updates group, named **"Q3/Q4 Updates <Month> <Year>"** (for example "Q3/Q4 Updates November 2026"). Match case-insensitively on the month and year. If there's no group for the current month, ask the user which group to use rather than defaulting.
-
-## Step 3: owner
-
-The owner is the **user running the skill**: `get_user_context` gives their Monday user ID. If that fails, ask the user (fallback Rebecca Tomasis `25036305` only if they confirm).
-
-## Step 4: update type (status_1)
-
-Definitions (Nesia, Oct 2026):
-
-| Update | Label |
-|---|---|
-| Semantic Triples Updater ran (new product triples inserted) | **Product update** (index `108`) |
-| Mostly intro, CTA and/or TL;DR, plus link, spacing, image, card and other mechanical fixes | **light Update** (index `2`) |
-| Link plus mechanical fixes only | **light Update** (index `2`) |
-| New or substantially rewritten body sections, accuracy fixes in the body, added quotes or stats | **mid Update** (index `9`) |
-| Price correction plus restructure plus new sections | **heavy Update** (resolve the index by label name from `get_board_info`) |
-
-If several apply, use the highest: Product update > heavy > mid > light. When in doubt, resolve labels by name from `get_board_info` rather than trusting an index.
-
-## Step 5: build the exact column values, then create or update
-
-Find the cluster item first: `items_page_by_column_values(board_id: 5557032877, columns: [{column_id: "url", column_values: ["<article url>"]}])` (variable type `[String]!`).
+Call `get_board_info` (columns only) first and resolve labels and IDs from it. Do not guess.
 
 | Column | Value |
 |---|---|
 | item name | Article title |
-| `status_1` | Update type from Step 4 |
-| `people` | `{"personsAndTeams":[{"id":<owner id>,"kind":"person"}]}` |
-| `dropdown_mkwzfbhw` | Content bucket (use the board's own label text, for example "🛒 eCommerce"; Monday labels keep their spelling) |
-| `status2` | `{"label":"Live"}` |
-| `text7` | Reason for the update (the Phase 2 criteria tags, for example "6mo, rank-drop", plus the user's reason if given) |
-| `checkbox_3` | `{"checked":"true"}` only if an FAQ was added |
-| `text3` | Short, specific summary: what is live now, plus what was dropped and why. Mention the whole-article audit passes (links, encyclopedia, formatting) |
-| `connect_boards` | `{"item_ids":[<cluster item id>]}` |
+| `text` (URL) | `https://www.wix.com/seo/learn/resource/<slug>` (or the `/studio/blog/` URL) |
+| `status` (Article status) | `Published` after a successful publish; `To review` while a draft awaits approval |
+| `multiple_person_mm3jf7j3` (People) | the user running the skill: `{"personsAndTeams":[{"id":<id>,"kind":"person"}]}` from `get_user_context`; ask if it fails |
+| `date5` (Publish date) | only if the article was republished with a new `firstPublishedDate`; otherwise leave blank |
 
-**Never send placeholder values.** Build the exact final string for every column before the mutation. When updating an existing item, read `text3` first so it can be restored.
+The board has no summary or update-type column. Put the summary in an **item update** (`create_update`): what changed, claim ledger, sources used, and anything dropped and why. Add the update-note line used on the article (e.g. "Originally written by X. Updated by Y on <date>.").
 
-## Step 6: set the dates
+## Step 3: verify
 
-Set today's date on BOTH the post (`firstPublishedDate`, done in Phase 7) and the cluster item's `date` column on `5557032877`. The content schedule's Publish column mirrors the cluster item's `date`. Skip this only for an approved silent fix (see SKILL.md, sitewide sweeps).
+Re-read the item and confirm the group, URL, status and the update text. Report the item link to the user.
 
-## Step 7: verify
-
-Re-read the item. `text` and `value` both return null for board-relation columns, which looks like a missing connection. Query the fragment instead, or you'll "fix" something that was never broken:
-
-```graphql
-column_values(ids:["connect_boards"]){ ... on BoardRelationValue { linked_item_ids linked_items { id name } } }
-```
-
-## After every later round
-
-Update Monday after EVERY round of changes on the same article: `text3` = what is live now plus what was dropped. Same-scope follow-ups append a note to the existing item's `text3` rather than creating a new item. Re-type the item when the scope grows. At the end of the session, re-read all items and cluster dates touched.
+## Open
+- Confirm whether the original item should also change status after a refresh. Default: leave it alone.

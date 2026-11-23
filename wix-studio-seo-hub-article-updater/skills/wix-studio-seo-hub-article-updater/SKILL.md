@@ -1,6 +1,6 @@
 ---
 name: "wix-studio-seo-hub-article-updater"
-description: "Identifies Wix Studio SEO Hub articles (www.wix.com/studio/blog/*) that need updating, diagnoses why, suggests targeted changes, runs a whole-article quality audit (claims, TL;DR, links, formatting, CTAs, images) and pushes approved edits to the Wix Studio SEO Hub blog with Monday logging. Use whenever the user wants to find stale Studio hub or Studio blog articles, refresh agency/freelancer/SEO content on the Studio blog, push content changes to the Studio SEO Hub, fix product inaccuracies about Wix Studio, or run any content refresh workflow for the Wix Studio SEO Hub. Trigger on phrases like \"update the Studio SEO hub\", \"studio blog refresh\", \"which studio articles are stale\", \"push updates to the SEO hub\"."
+description: "Identifies Wix Studio SEO Hub articles (www.wix.com/studio/blog/*) that need updating, diagnoses why, suggests targeted changes, runs a whole-article quality audit (claims, TL;DR, links, formatting, CTAs, images) and pushes approved edits to the Wix Studio SEO Hub blog with Monday logging (SEO Hub board). Use whenever the user wants to find stale Studio hub or Studio blog articles, refresh agency/freelancer/SEO content on the Studio blog, push content changes to the Studio SEO Hub, fix product inaccuracies about Wix Studio, or run any content refresh workflow for the Wix Studio SEO Hub. Trigger on phrases like \"update the Studio SEO hub\", \"studio blog refresh\", \"which studio articles are stale\", \"push updates to the SEO hub\"."
 ---
 
 # Wix Studio SEO Hub Article Updater
@@ -41,18 +41,17 @@ Read the relevant reference file before each step. Don't work from memory of the
 
 ---
 
-## Phase 1: Scope the Studio hub queue
+## Phase 1: Scope the SEO Hub queue
 
-The hub is a single content bucket: **Studio** (board `5557032877`, column `dropdown_mkx3wfcq`, label id `23`). No 12-bucket menu.
+The queue is the Monday board **Content Pipeline – SEO Hub** (`2709452345`), not the EN Blogs Clusters board.
 
-Use `AskUserQuestion` (single select) to narrow the queue by the board's **Cluster** column (`dropdown`):
-1. All Studio articles *(no cluster filter)*
-2. Website creation
-3. Marketing
-4. Business
-5. Web design
+Use `AskUserQuestion` (single select) to choose which groups to pull from:
+1. Published, 2026 (`group_mm09krvw`)
+2. Published, OLD (`new_group3683`)
+3. Refresh (`new_group65130`)
+4. All of the above
 
-Record the choice. Items sit in group `group_mm5p5205` ("FWD") but filter on the bucket column, not the group: other Studio items may live elsewhere. Also exclude items whose Status (`action_item`) is Delete or Redirect, or whose Cluster Priority is "Prep to delete".
+Never queue items from Ideas, Brief, In progress, Next up or Backlog: they are not live. Skip items already in the **Agentic updates** group (`group_mm9c1yka`) as "already logged", but list them so the user can re-select one.
 
 ---
 
@@ -60,8 +59,8 @@ Record the choice. Items sit in group `group_mm5p5205` ("FWD") but filter on the
 
 Use `AskUserQuestion` with `multiSelect: true` to ask which types of articles to surface. Present all options: the user may pick any combination:
 
-1. **Not updated in 3 months**: articles whose "Last Updated" date on the Monday board is more than 90 days ago *(data source: Monday.com)*
-2. **Not updated in 6 months**: articles whose "Last Updated" date is more than 180 days ago *(data source: Monday.com)*
+1. **Not updated in 3 months**: articles whose **Publish date** (`date5`) on the Monday board is more than 90 days ago (this board has no "Last updated" column; if an Agentic updates log item exists for the article, use its date instead) *(data source: Monday.com)*
+2. **Not updated in 6 months**: articles whose **Publish date** (`date5`) is more than 180 days ago (same rule) *(data source: Monday.com)*
 3. **Lost AIO citations (10+)**: articles that lost more than 10 AI Overview citations *(data source: Ahrefs)*
 4. **Lost keyword rankings**: articles that dropped position for their highest-volume organic keyword *(data source: Ahrefs)*
 5. **Declining GSC clicks**: articles that lost organic clicks over the past 3 months *(data source: Ahrefs/GSC, project_id: 3213842; verify the project covers `/studio/blog/` pages, else report that GSC criteria are unavailable)*
@@ -77,37 +76,22 @@ Record which criteria were selected. Multiple criteria are allowed; each matchin
 
 ### Step 3a: Fetch the board schema and items from Monday.com
 
-**Step 1: Get the board schema** to understand column names:
 ```
-mcp__5fcc3499-6805-42fd-8b00-4c15333bcf9f__get_board_info
-  → boardId: "5557032877"
+get_board_info    → boardId: 2709452345   (columns only)
+get_board_items_page → boardId: 2709452345, includeColumns: true,
+  columnIds: ["text","date5","status","multiple_person_mm3jf7j3"], limit 100,
+  filters: group any_of [<groups chosen in Phase 1>]
 ```
-From the response, identify which column IDs correspond to:
-- Article title (usually the item name)
-- Article URL (look for a column named "URL", "Link", or "Article URL")
-- Content bucket / blog cluster (look for a column named "Blog Cluster", "Content Bucket", "Category", or similar)
-- Last updated date (look for "Last Updated", "Date Updated", or a date column)
+Key columns: `text` = URL, `date5` = Publish date, `status` = Article status, `multiple_person_mm3jf7j3` = People. Paginate with the cursor until `has_more` is false. Items with an empty URL are skipped and listed. If Monday returns an authentication error, ask the user to reconnect it in Settings > Connectors.
 
-**Step 2: Fetch all board items** (paginated):
-```
-mcp__5fcc3499-6805-42fd-8b00-4c15333bcf9f__get_board_items_page
-  → boardId: "5557032877"
-  → limit: 100
-```
-If the board has more than 100 items, use the cursor returned to fetch subsequent pages until all items are retrieved.
+### Step 3b: Filter
 
-Each item will have a `name` (article title) and `column_values` array: parse this to extract the URL, content bucket, and last updated date for each article.
-
-> If the board returns an authentication error, ask the user to reconnect Monday.com from Settings → Connectors.
-
-### Step 3b: Filter by content bucket
-
-Fetch with filter `dropdown_mkx3wfcq any_of [23]` (add `dropdown` for the cluster pick), `includeColumns` with `columnIds: ["url","dropdown","dropdown_mkx3wfcq","date","status_1","action_item"]`, limit 100, and paginate. Keep URLs under `www.wix.com/seo/learn/resource/` (SEO Learn Hub) or `www.wix.com/studio/blog/`; list any other Studio items separately and ask.
+Keep only items whose URL is on `www.wix.com/seo/learn/resource/` or `www.wix.com/studio/blog/`. The slug is the last path segment.
 
 ### Step 3c: Apply criteria filters
 
 **Criteria 1 & 2 (Monday.com: date-based):**
-Evaluated from data already fetched in Step 3a. Compare the "Last Updated" column value to today's date:
+Evaluated from data already fetched in Step 3a. Compare the `date5` Publish date to today's date:
 - Tag the article with `[3mo]` if >90 days old
 - Tag the article with `[6mo]` if >180 days old
 No additional tool calls needed for these.
@@ -152,7 +136,7 @@ Only run if the user selected the relevant criteria. Run all article checks in p
 Show the filtered list as a table in the conversation:
 
 ```
-| # | Article | URL | Last Updated | Criteria |
+| # | Article | URL | Publish date | Criteria |
 |---|---------|-----|--------------|----------|
 | 1 | How to Make a Website | wix.com/studio/blog/... | Jan 12, 2025 | [6mo] [rank-drop] |
 | 2 | Website Builder Guide | wix.com/studio/blog/... | Feb 28, 2025 | [3mo] |
@@ -165,7 +149,7 @@ Then ask the user to type the number of the article they want to work on. They m
 
 ```json
 {
-  "content_bucket": "Studio",
+  "content_bucket": "SEO Hub (2709452345)",
   "last_run": "2026-05-04",
   "selected_url": "https://www.wix.com/studio/blog/...",
   "remaining_articles": [
@@ -205,7 +189,7 @@ Tell the user in one line that the **whole-article audit and the Gate 5b topic c
 4. If the draft has `hasUnpublishedChanges: true`, someone else may be editing it: stop and ask before continuing.
 5. **Read the live article** with `mcp__Claude_in_Chrome__navigate` + `mcp__Claude_in_Chrome__get_page_text`. Note headings, section structure and the first fold (intro and content before the first major H2).
 6. **Gate 0:** GET a recent approved Studio hub article in the same cluster and note its conventions for TL;DR, CTA, FAQ, cards and quote attribution (`quality-gates.md`).
-7. **Find the main keyword** from the cluster item's KW column on `5557032877` (needed for Gate 5b, the SERP Updater and alt text).
+7. **Find the main keyword.** The SEO Hub board has no KW column: look the URL up on the EN Blogs Clusters board `5557032877` (read only, `url` column, KW in `long_text`); if absent, ask the user or take the top organic keyword from Ahrefs `site-explorer-organic-keywords` for the URL. Never write to `5557032877` (needed for Gate 5b, the SERP Updater and alt text).
 
 ### Step 6a-2: Read the user's source URLs (when given)
 
@@ -384,7 +368,7 @@ After a successful verify: "✅ Changes pushed to [article title] (published: [p
 
 ### Step 7h: Log to Monday
 
-Follow `references/monday-logging.md`: one item per article per day on `5546696573` in the current month's "Q3/Q4 Updates <Month> <Year>" group, owner = the user running the skill, update type light / mid / heavy / Product update, status Live, reason, FAQ checkbox, summary in `text3`, `connect_boards` to the cluster item, and today's date on the cluster item.
+Follow `references/monday-logging.md`: one log item per article per day on board `2709452345`, in the **Agentic updates** group (`group_mm9c1yka`). Never delete or move the article's original item.
 
 ### Error handling
 
