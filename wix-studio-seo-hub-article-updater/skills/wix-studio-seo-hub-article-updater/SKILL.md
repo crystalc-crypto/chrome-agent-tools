@@ -5,7 +5,7 @@ description: "Identifies Wix Studio SEO Hub articles (www.wix.com/studio/blog/*)
 
 # Wix Studio SEO Hub Article Updater
 
-An end-to-end workflow for identifying, diagnosing, editing and publishing updates to Wix Studio SEO Hub articles (`www.wix.com/studio/blog/*`). The skill guides the user through selecting a content bucket, choosing articles based on staleness or performance criteria, picking update types, running the whole-article quality audit, approving changes and pushing them live to the Wix blog.
+An end-to-end workflow for identifying, diagnosing, editing and publishing updates to Wix Studio SEO Hub articles (`www.wix.com/seo/learn/resource/*` and `www.wix.com/studio/blog/*`). The skill guides the user through selecting a content bucket, choosing articles based on staleness or performance criteria, picking update types, running the whole-article quality audit, approving changes and pushing them live to the Wix blog.
 
 **Every update audits and fixes the whole article**, not only the content this skill adds. The quality gates (Gates 0 to 6) run on every article, whatever update types were picked, and publishing is blocked until they pass.
 
@@ -102,7 +102,7 @@ Each item will have a `name` (article title) and `column_values` array: parse th
 
 ### Step 3b: Filter by content bucket
 
-Fetch with filter `dropdown_mkx3wfcq any_of [23]` (add `dropdown` for the cluster pick), `includeColumns` with `columnIds: ["url","dropdown","dropdown_mkx3wfcq","date","status_1","action_item"]`, limit 100, and paginate. Keep only URLs containing `/studio/blog/`; list any other Studio items separately and ask.
+Fetch with filter `dropdown_mkx3wfcq any_of [23]` (add `dropdown` for the cluster pick), `includeColumns` with `columnIds: ["url","dropdown","dropdown_mkx3wfcq","date","status_1","action_item"]`, limit 100, and paginate. Keep URLs under `www.wix.com/seo/learn/resource/` (SEO Learn Hub) or `www.wix.com/studio/blog/`; list any other Studio items separately and ask.
 
 ### Step 3c: Apply criteria filters
 
@@ -207,6 +207,12 @@ Tell the user in one line that the **whole-article audit and the Gate 5b topic c
 6. **Gate 0:** GET a recent approved Studio hub article in the same cluster and note its conventions for TL;DR, CTA, FAQ, cards and quote attribution (`quality-gates.md`).
 7. **Find the main keyword** from the cluster item's KW column on `5557032877` (needed for Gate 5b, the SERP Updater and alt text).
 
+### Step 6a-2: Read the user's source URLs (when given)
+
+If the user supplies source URLs, read each one **in full** before drafting. Try in order: `WebFetch`, then `mcp__Claude_in_Chrome__navigate` + `get_page_text`. If a host fails to resolve (`ENOTFOUND`, blocked domain), say which host failed. `WebSearch` summaries are secondary: use them only to point at what to look for, never as a read of the page, and label any claim that rests on them `[verify]`. Never draft claims from a source you could not read. Ask the user to paste the text instead.
+
+Every new fact in the draft must carry its source URL in the approval package (Phase 6d). Keep the original author's voice: sample the existing copy (person, asides, punctuation habits, sentence length) before writing, and match it.
+
 ### Step 6b: Run the standard whole-article audit (always)
 
 Run every check on the **whole node tree**, not only the parts you will touch. Read each reference file first.
@@ -240,6 +246,8 @@ Follow each update type's reference file to identify its changes. Where a refere
 - New figures in the intro or TL;DR must pass Gate 1. Stats from the Statistics Library go in body paragraphs only.
 - Anchor rules in `link-rules.md`; never add an awkward sentence just to place a link.
 
+**Contributor articles:** if the article is by an external contributor, keep the byline and add an update note directly under it: "Originally written by <author>. Updated by <updater> on <Month D, YYYY>." Ask the user whether to keep the original `firstPublishedDate` (default for contributor pieces) or republish with today's date; never change it silently.
+
 ### Step 6d: Present one approval package
 
 Show everything before anything is pushed, in this order:
@@ -258,7 +266,7 @@ The user can approve, edit or skip each item. **Never push without explicit appr
 
 ## Phase 7: Push changes to the Wix blog
 
-**Target site ID (hardcoded):** `1bd95b49-a53d-4ff9-917d-cdcc422f879e` ("Wix Studio SEO Hub"), serving `www.wix.com/studio/blog/*`. Always use this ID. Never use the main blog site (`1faf9cf8-5bbb-49dd-99ff-3a182f82629d`), the legacy "Wix Blog" site, or "Wix Studio Academy" (`27c78b34-3286-45fc-931d-cd9025c7c891`). If a slug is not found, say so, never fall through to another site.
+**Target site ID (hardcoded):** `1bd95b49-a53d-4ff9-917d-cdcc422f879e` ("Wix Studio SEO Hub"), serving `www.wix.com/seo/learn/resource/<slug>` (confirmed Nov 2026; the post API returns `url.base` + `url.path`) and possibly `www.wix.com/studio/blog/*`. Always use this ID. Never use the main blog site (`1faf9cf8-5bbb-49dd-99ff-3a182f82629d`), the legacy "Wix Blog" site, or "Wix Studio Academy" (`27c78b34-3286-45fc-931d-cd9025c7c891`). If a slug is not found, say so, never fall through to another site.
 
 Use `ExecuteWixAPI` (writes need `hasMutations:true`). If you're unsure of a request or response shape, check it with `ReadFullDocsMethodSchema` rather than guessing.
 
@@ -272,7 +280,7 @@ mcp__3da1c945-aec7-4495-8843-de00acdd6a8c__ExecuteWixAPI
 
 Extract `post.id` (draft id == published id). Resolve it in the same run every time.
 
-**Slug resolution (Studio):** the Monday URL is `https://www.wix.com/studio/blog/<slug>`. Use `<slug>` only. If `posts/slugs/<slug>` returns 404, do NOT guess: query the site's posts (`POST /blog/v3/posts/query`, paginate, match on `post.url` or `slug`) and confirm the match with the user before continuing. If this site does not use Blog v3 or the slug cannot be matched, stop and report.
+**Slug resolution (Studio):** the Monday URL is `https://www.wix.com/seo/learn/resource/<slug>` or `.../studio/blog/<slug>`. Use `<slug>` only. If `posts/slugs/<slug>` returns 404, do NOT guess: query the site's posts (`POST /blog/v3/posts/query`, paginate, match on `post.url` or `slug`) and confirm the match with the user before continuing. If this site does not use Blog v3 or the slug cannot be matched, stop and report.
 
 ### Step 7b: Retrieve the full draft post
 

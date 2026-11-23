@@ -8,7 +8,7 @@ This skill was adapted from the main Wix blog updater. Wherever another referenc
 |---|---|
 | Wix site | "Wix Studio SEO Hub", `1bd95b49-a53d-4ff9-917d-cdcc422f879e` |
 | Not this site | main blog `1faf9cf8-5bbb-49dd-99ff-3a182f82629d`, Wix Studio Academy `27c78b34-3286-45fc-931d-cd9025c7c891` |
-| Live URL pattern | `https://www.wix.com/studio/blog/<slug>` (from the Monday URL column) |
+| Live URL pattern | `https://www.wix.com/seo/learn/resource/<slug>` (SEO Learn Hub, confirmed via API on this site); Monday also holds `https://www.wix.com/studio/blog/<slug>` items |
 | Article source | board `5557032877`, content bucket column `dropdown_mkx3wfcq` = **Studio** (id `23`); items seen in group `group_mm5p5205` "FWD"; clusters used: Website creation, Marketing |
 | Last-updated column | `date`; priority `status_1`; status `action_item` |
 | EEAT quotes | board `18411479018`, group `group_mm3gfj48` "Wix Studio" (see `update-eeat.md`) |
@@ -30,7 +30,7 @@ These could not be retrieved while adapting. Ask the user, or look them up, and 
 3. **Monday logging:** `monday-logging.md` logs to board `5546696573` (Blog SEO & Content Squad) in "Q3/Q4 Updates <Month> <Year>" groups. Confirm whether Studio hub updates log there, and the content-bucket label to use (`dropdown_mkwzfbhw`).
 4. **Triples group:** see `products.md` override.
 5. **Verified facts:** `verified-facts.md` is about domain and consumer pricing. For Studio plans/pricing/features use the Wix Studio help center and pricing page, rendered in a browser; add an editor's note per the usual convention.
-6. **Slug resolution:** a first probe of `posts/slugs/build-client-website-wix-studio` on the hub site returned 404 (the post may be under a different slug or the Studio blog may not be on Blog v3). See the slug-resolution step in SKILL.md Step 7a and confirm the API path with one real article before relying on it.
+6. **Slug resolution:** `GET /blog/v3/posts/slugs/<slug>?fieldsets=URL&fieldsets=RICH_CONTENT` works on this site for `/seo/learn/resource/<slug>` articles (verified on `microsoft-clarity-for-ux-and-conversions`). The `/studio/blog/` slug probed earlier 404d: unresolved.
 7. **GSC project:** `3213842` was for the main blog; confirm it covers `/studio/blog/`.
 8. **Encyclopedia and ecommerce-spelling files** are carried over from the consumer blog and should be reviewed for relevance.
 9. **Ahrefs / Monday / Wix connector IDs** in tool names (`mcp__<uuid>__...`) are connector-specific; use whatever the current session exposes.
