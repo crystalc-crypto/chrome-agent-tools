@@ -1,6 +1,6 @@
 ---
 name: "wix-studio-seo-hub-article-updater"
-description: "Identifies Wix Studio SEO Hub articles (www.wix.com/studio/blog/*) that need updating, diagnoses why, suggests targeted changes, runs a whole-article quality audit (claims, TL;DR, links, formatting, CTAs, images) and pushes approved edits to the Wix Studio SEO Hub blog with Monday logging (SEO Hub board). Use whenever the user wants to find stale Studio hub or Studio blog articles, refresh agency/freelancer/SEO content on the Studio blog, push content changes to the Studio SEO Hub, fix product inaccuracies about Wix Studio, or run any content refresh workflow for the Wix Studio SEO Hub. Trigger on phrases like \"update the Studio SEO hub\", \"studio blog refresh\", \"which studio articles are stale\", \"push updates to the SEO hub\"."
+description: "Identifies Wix Studio SEO Hub articles (www.wix.com/seo/learn/resource/* and www.wix.com/studio/blog/*) that need updating, diagnoses why, suggests targeted changes, runs a whole-article quality audit (claims, TL;DR, links, formatting, CTAs, images) and pushes approved edits to the Wix Studio SEO Hub blog with Monday logging (SEO Hub board). Use whenever the user wants to find stale Studio hub or Studio blog articles, refresh agency/freelancer/SEO content on the Studio blog, push content changes to the Studio SEO Hub, fix product inaccuracies about Wix Studio, or run any content refresh workflow for the Wix Studio SEO Hub. Also use it to apply approved rows from a Google Sheet of proposed changes. Trigger on phrases like \"update the Studio SEO hub\", \"apply the approved rows\", \"studio blog refresh\", \"which studio articles are stale\", \"push updates to the SEO hub\"."
 ---
 
 # Wix Studio SEO Hub Article Updater
@@ -19,6 +19,7 @@ Read the relevant reference file before each step. Don't work from memory of the
 
 | File | When to read |
 |------|-------------|
+| `references/sheet-mode.md` | When the user gives a Google Sheet of proposed changes or says "apply approved rows": follow it instead of Phases 1 to 6. |
 | `references/studio-overrides.md` | **Read FIRST, every run.** Studio hub differences (site, URLs, audience, bucket, branded rule, open items). Where it conflicts with any other file, it wins. |
 | `references/quality-gates.md` | **Every update.** Gates 0 to 5b: copy the convention, claim ledger, claim scope, branded vs non-branded, WHOIS wording, tone, TL;DR test, never delete content, topic coverage |
 | `references/formatting-audit.md` | **Every update.** Gate 6 formatting audit, re-spacing routine, lists, headings, images and preview cards, off-topic asides, writing style |
@@ -40,6 +41,10 @@ Read the relevant reference file before each step. Don't work from memory of the
 | `references/nuance-blocks.md` | Pre-approved nuance block library |
 
 ---
+
+## Mode check (before Phase 1)
+
+If the user supplies a Google Sheet link or asks to apply approved rows, read `references/sheet-mode.md` and follow it in place of Phases 1 to 6, then continue at Phase 7. Otherwise run the phases below.
 
 ## Phase 1: Scope the SEO Hub queue
 

@@ -1,0 +1,2 @@
+article_url,change_id,section_heading,action,current_text,proposed_text,source_url,source_quote,confidence,status,reviewer,notes
+https://www.wix.com/seo/learn/resource/microsoft-clarity-for-ux-and-conversions,clarity-001,Recordings,replace,"Note: Clarity only stores recordings for 30 days unless you designate a recording as a ""favorite,"" in which case you'll have access to it for 13 months.",EXAMPLE ROW: replace with the corrected retention note,https://learn.microsoft.com/en-us/clarity/faq,EXAMPLE: short verbatim quote from the source,verify,proposed,,
